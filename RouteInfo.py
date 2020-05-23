@@ -52,17 +52,17 @@ class RouteInfo:
 
             current_distance = from_client.location.distance(to_client.location)
             path_distance += current_distance
-            current_time += int(current_distance / self.manager.speed)
+            arrival_time = current_time + int(current_distance / self.manager.speed)
 
-            if current_time < to_client.free_time.from_time:
-                waiting_time += to_client.free_time.from_time - current_time
-                current_time = to_client.free_time.from_time
+            if arrival_time < to_client.free_time.from_time:
+                waiting_time += to_client.free_time.from_time - arrival_time
+                arrival_time = to_client.free_time.from_time
 
-            if current_time > to_client.free_time.to_time - to_client.meeting_duration:
+            if arrival_time > to_client.free_time.to_time - to_client.meeting_duration:
                 lateness_count += 1
             else:
                 meetings.append((to_client.location, Timespan(current_time, current_time + to_client.meeting_duration)))
-                current_time += to_client.meeting_duration
+                current_time = arrival_time + to_client.meeting_duration
                 value += to_client.value
 
         self.distance = path_distance
