@@ -1,68 +1,72 @@
-import pandas as pd
-from pylab import *
 import numpy as np
+import pandas as pd
 import random
-from Point import Point
-from Timespan import Timespan
+from pylab import plot, ylabel, xlabel, show, figure
+from typing import List, Tuple
 from Client import Client
 from Manager import Manager
+from Point import Point
 from RouteInfo import RouteInfo
+from Timespan import Timespan
 
 
-# Creates an one individual
-def create_route(client_list):
-    route = random.sample(client_list, len(client_list))
-    return route
+Route = List[Client]  # В генетическом алгоритме является генотипом
+Generation = List[Route]
 
 
-# Loop over createRoute def to create many routes for our population.
-def initial_population(pop_size, client_list):
+def create_route(clients: List[Client]) -> Route:
+    """Возвращает новый случайный маршрут."""
+    return random.sample(clients, len(clients))
+
+
+def initial_population(population_size: int, clients: List[Client]) -> Generation:
+    """Цикл вызовов createRoute для создания начальной популяции.
+    Возвращает начальную популяцию."""
     population = []
-    for i in range(0, pop_size):
-        population.append(create_route(client_list))
+    for i in range(0, population_size):
+        population.append(create_route(clients))
     return population
 
 
-# Determinate the fitness. Simulate the "survival of the fittest";
-# Use the Fitness to rank each individual in the population;
-# The output will be an ordered list with the route IDs and each associated fitness score.
-def rank_routes(manager, population):
-    route_info = {}
-    for i in range(0, len(population)):
-        route_info[i] = RouteInfo(manager, population[i])
-    return sorted(route_info.items(), key=lambda r: r[1].fitness, reverse=True)
+def rank_routes(manager: Manager, generation: Generation) -> List[Tuple[int, RouteInfo]]:
+    """Вычисление параметров для каждого маршрута.
+    Ранжирование маршрутов по значению функции приспособленности.
+    Возвращает отсортированный по значению функции приспособленности
+    список пар (индекс маршрута, информация о маршруте)."""
+    route_info = []
+    for i in range(0, len(generation)):
+        route_info.append((i, RouteInfo(manager, generation[i])))
+    return sorted(route_info, key=lambda item: item[1].fitness, reverse=True)
 
 
-# SELECT THE MATING POOL:
-# Select the parents that will be used to create the next generation
-def selection(pop_ranked, elite_size):
+def selection(population_ranked: List[Tuple[int, RouteInfo]], elite_size: int) -> List[int]:
+    """Селекция: выбор маршрутов, которые будут использованы для создания следующего поколения.
+    Возвращает список индексов выбранных маршрутов."""
     selection_results = []
-    df = pd.DataFrame(np.array([(r[0], r[1].fitness) for r in pop_ranked]), columns=["Index", "Fitness"])
+    df = pd.DataFrame(np.array([(item[0], item[1].fitness) for item in population_ranked]),
+                      columns=["Index", "Fitness"])
     df['cum_sum'] = df.Fitness.cumsum()
     df['cum_percent'] = 100 * df.cum_sum / df.Fitness.sum()
 
     for i in range(0, elite_size):
-        selection_results.append(pop_ranked[i][0])
-    for _ in range(0, len(pop_ranked) - elite_size):
+        selection_results.append(population_ranked[i][0])
+    for _ in range(0, len(population_ranked) - elite_size):
         pick = 100 * random.random()
-        for i in range(0, len(pop_ranked)):
+        for i in range(0, len(population_ranked)):
             if pick <= df.iat[i, 3]:
-                selection_results.append(pop_ranked[i][0])
+                selection_results.append(population_ranked[i][0])
                 break
     return selection_results
 
 
-def get_mating_pool(population, selection_results):
-    mating_pool = []
-    for i in range(0, len(selection_results)):
-        index = selection_results[i]
-        mating_pool.append(population[index])
-    return mating_pool
+def get_mating_pool(population: Generation, selection_results: List[int]) -> Generation:
+    """Возвращает множество маршрутов-родителей, которые были выбраны."""
+    return [population[index] for index in selection_results]
 
 
-# BREED FUNCTION:
-# With our mating pool created, we can create the next generation in a process called "crossover"
-def breed(parent1, parent2):
+def breed(parent1: Route, parent2: Route) -> Route:
+    """Функция скрещивания двух маршрутов-родителей.
+    Возвращает результат скрещивания двух маршрутов-родителей."""
     child_p1 = []
 
     gene_a = int(random.random() * len(parent1))
@@ -80,22 +84,25 @@ def breed(parent1, parent2):
     return child
 
 
-def breed_population(mating_pool, elite_size):
+def breed_population(mating_pool: Generation, elite_size: int) -> Generation:
+    """Функция скрещивания популяции.
+    Возвращает новую популяцию, полученную в результате скрещивания."""
     children = []
-    length = len(mating_pool) - elite_size
-    pool = random.sample(mating_pool, len(mating_pool))
-
+    # Элитарность - элита автоматически проходит в следующее поколение
     for i in range(0, elite_size):
         children.append(mating_pool[i])
 
-    for i in range(0, length):
+    pool = random.sample(mating_pool, len(mating_pool))
+
+    for i in range(0, len(mating_pool) - elite_size):
         child = breed(pool[i], pool[len(mating_pool) - i - 1])
         children.append(child)
     return children
 
 
-# MUTATE:
-def mutate(individual, mutation_rate):
+def mutate(individual: Route, mutation_rate: float) -> Route:
+    """Мутация генотипа.
+    Возвращает мутированный генотип."""
     for swapped in range(len(individual)):
         if random.random() < mutation_rate:
             swap_with = int(random.random() * len(individual))
@@ -109,7 +116,9 @@ def mutate(individual, mutation_rate):
     return individual
 
 
-def mutate_population(population, mutation_rate):
+def mutate_population(population: Generation, mutation_rate: float) -> Generation:
+    """Мутация популяции.
+    Возвращает мутированную популяцию."""
     mutated_population = []
     for i in range(0, len(population)):
         mutate_individual = mutate(population[i], mutation_rate)
@@ -118,43 +127,47 @@ def mutate_population(population, mutation_rate):
     return mutated_population
 
 
-# REPEAT:
-# Function that produces a new generation.
-# First, we rank the routes in the current generation using "rankRoutes".
-# We then determine our potential parents by running the "selection" function,
-# which allows us to create the mating pool using the "matingPool" function.
-# Finally, we then create our new generation using the "breedPopulation" function
-# and then applying mutation using the "mutatePopulation" function.
-def get_next_generation(manager, current_gen, elite_size, mutation_rate):
-    population_ranked = rank_routes(manager, current_gen)
+def get_next_generation(manager: Manager,
+                        current_generation: Generation,
+                        elite_size: int,
+                        mutation_rate: float) -> Generation:
+    """Основной цикл:
+    Функция, производящая новое поколение.
+    Во-первых, ранжируем маршруты текущего поколения используя "rank_routes".
+    Затем выбираем множество потенциальных родителей в функции "selection".
+    Создаем множество потенциальных родителей в функции "get_mating_pool".
+    Наконец, создаем новое поколение, используя функцию "breed_population".
+    и затем применяем мутацию в функции "mutate_population".
+    Возвращает новую популяцию."""
+    population_ranked = rank_routes(manager, current_generation)
     selection_results = selection(population_ranked, elite_size)
-    mating_pool = get_mating_pool(current_gen, selection_results)
+    mating_pool = get_mating_pool(current_generation, selection_results)
     children = breed_population(mating_pool, elite_size)
     next_generation = mutate_population(children, mutation_rate)
     return next_generation
 
 
-# def genetic_algorithm(manager, population, pop_size, elite_size, mutation_rate, generations):
-#     population = initial_population(pop_size, population)
-#     print("Initial distance: " + str(1 / rank_routes(manager, population)[0][1]))
 #
-#     for i in range(0, generations):
-#         population = get_next_generation(manager, population, elite_size, mutation_rate)
-#
-#     print("Final distance: " + str(1 / rank_routes(manager, population)[0][1]))
-#     best_route_index = rank_routes(manager, population)[0][0]
-#     best_route = population[best_route_index]
-#     return best_route
+def genetic_algorithm_plot(manager: Manager,
+                           population: List[Client],
+                           pop_size: int,
+                           elite_size: int,
+                           mutation_rate: float,
+                           generation_count: int):
+    """Генетический алгоритм.
+    Основной цикл выполняется определенное количество раз.
+    Отслеживается прогресс и по окончании работы алгоритма выводится несколько графиков для наглядности.
+    На консоль печатается результат работы алгоритма - расписание встреч менеджера.
+    """
+    current_generation = initial_population(pop_size, population)
+    progress = [rank_routes(manager, current_generation)[0][1]]
 
+    for i in range(0, generation_count):
+        current_generation = get_next_generation(manager, current_generation, elite_size, mutation_rate)
+        progress.append(rank_routes(manager, current_generation)[0][1])
 
-def genetic_algorithm_plot(manager, population, pop_size, elite_size, mutation_rate, generations):
-    population = initial_population(pop_size, population)
-    progress = []
-    progress.append(rank_routes(manager, population)[0][1])
-
-    for i in range(0, generations):
-        population = get_next_generation(manager, population, elite_size, mutation_rate)
-        progress.append(rank_routes(manager, population)[0][1])
+    best_route = progress[-1]
+    print(best_route)
 
     plot([r.fitness for r in progress])
     ylabel('Fitness')
@@ -190,9 +203,11 @@ def genetic_algorithm_plot(manager, population, pop_size, elite_size, mutation_r
 # расстояние в метрах
 # скорость в м / мин
 # время в минутах
+radius = 5000  # радиус расположения клиентов в метрах
+
 random_manager = Manager(
-    start=Point(x=int(random.random() * 200), y=int(random.random() * 200)),
-    finish=Point(x=int(random.random() * 200), y=int(random.random() * 200)),
+    start=Point(x=int(random.random() * radius), y=int(random.random() * radius)),
+    finish=Point(x=int(random.random() * radius), y=int(random.random() * radius)),
     work_time=Timespan(from_time=540, to_time=1260),
     speed=10 * 60  # 36 км/час = 600 м/мин
 )
@@ -202,14 +217,21 @@ max_meeting_duration = 60
 
 for _ in range(0, 25):
     random_meeting_duration = random.randint(min_meeting_duration, max_meeting_duration)
-    random_free_time_from = random.randint(random_manager.work_time.from_time, random_manager.work_time.to_time - random_meeting_duration)
-    random_free_time_to = random.randint(random_free_time_from + random_meeting_duration, random_manager.work_time.to_time)
+    random_free_time_from = random.randint(random_manager.work_time.from_time,
+                                           random_manager.work_time.to_time - random_meeting_duration)
+    random_free_time_to = random.randint(random_free_time_from + random_meeting_duration,
+                                         random_manager.work_time.to_time)
     random_client_list.append(
         Client(
             value=random.randint(1, 100),
-            location=Point(x=int(random.random() * 200), y=int(random.random() * 200)),
+            location=Point(x=int(random.random() * radius), y=int(random.random() * radius)),
             meeting_duration=random_meeting_duration,
             free_time=Timespan(from_time=random_free_time_from, to_time=random_free_time_to)
         ))
 
-genetic_algorithm_plot(manager=random_manager, population=random_client_list, pop_size=100, elite_size=20, mutation_rate=0.01, generations=5000)
+genetic_algorithm_plot(manager=random_manager,
+                       population=random_client_list,
+                       pop_size=100,
+                       elite_size=20,
+                       mutation_rate=0.01,
+                       generation_count=500)

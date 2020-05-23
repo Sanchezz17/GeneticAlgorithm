@@ -1,10 +1,12 @@
 import math
-from Timespan import Timespan
 from Client import Client
+from Manager import Manager
+from Timespan import Timespan, display_time
+from typing import List
 
 
 class RouteInfo:
-    def __init__(self, manager, route):
+    def __init__(self, manager: Manager, route: List[Client]) -> None:
         if len(route) == 0:
             raise ValueError("Маршрут не должен быть пустым")
 
@@ -28,10 +30,12 @@ class RouteInfo:
         self.waiting_time = 0
         self.fitness = 0.0
         self.value = 0
+        self.meetings = []
+        self.end_time = 0
 
         self.calculate_parameters()
 
-    def calculate_parameters(self):
+    def calculate_parameters(self) -> None:
         if self.distance != 0:  # если параметры уже рассчитаны, то выходим
             return
 
@@ -40,22 +44,7 @@ class RouteInfo:
         lateness_count = 0
         waiting_time = 0
         value = 0
-
-        # от стартовой точки до первого клиента
-        # first_client = self.route[0]
-        # current_distance = self.manager.start.distance(first_client.location)
-        # path_distance += current_distance
-        # current_time += int(current_distance / self.manager.speed)
-        #
-        # if current_time < first_client.free_time.from_time:
-        #     waiting_time += first_client.free_time.from_time - current_time
-        #     current_time = first_client.free_time.from_time
-        #
-        # if current_time > first_client.free_time.to_time - first_client.meeting_duration:
-        #     lateness_count += 1
-        # else:
-        #     current_time += first_client.meeting_duration
-        #     value += first_client.value
+        meetings = []
 
         for i in range(0, len(self.route) - 1):
             from_client = self.route[i]
@@ -72,22 +61,30 @@ class RouteInfo:
             if current_time > to_client.free_time.to_time - to_client.meeting_duration:
                 lateness_count += 1
             else:
+                meetings.append((to_client.location, Timespan(current_time, current_time + to_client.meeting_duration)))
                 current_time += to_client.meeting_duration
                 value += to_client.value
-
-        # от последнего клиента до конечной точки
-        last_client = self.route[-1]
-        current_distance = last_client.location.distance(self.manager.finish)
-        path_distance += current_distance
-        current_time += int(current_distance / self.manager.speed)
 
         self.distance = path_distance
         self.lateness_count = lateness_count
         self.waiting_time = waiting_time
         self.value = value
+        self.meetings = meetings[:-1]
+        self.end_time = current_time
         self.fitness = self.value / float(self.distance + 3 * self.lateness_count + 2 * self.waiting_time)
-    #
-    # def route_fitness(self):
-    #     if self.fitness == 0:
-    #         self.fitness = self.value / float(self.distance + 3 * self.lateness_count + 2 * self.waiting_time)
-    #     return self.fitness
+
+    def __str__(self) -> str:
+        meetings = "\n\t".join([f"{meeting_location} {meeting_time}"
+                                for (meeting_location, meeting_time) in self.meetings])
+        return (
+            "Маршрут\n"
+            f"Старт: {self.manager.start} в {display_time(self.manager.work_time.from_time * 60)}\n\n"
+            "Встречи\n\t"
+            f"{meetings}\n\n"
+            f"Конечная точка: {self.manager.finish} в {display_time(self.end_time * 60)}\n"
+            f"Длина маршрута (в метрах): {self.distance}\n"
+            f"Количество встреч: {len(self.meetings)} из {len(self.route)}\n"
+            f"Суммарное время ожидания (в минутах): {self.waiting_time}\n"
+            f"Суммарная ценность клиентов: {self.value}\n"        
+            f"Значение функции приспособленности: {self.fitness}\n"
+        )
