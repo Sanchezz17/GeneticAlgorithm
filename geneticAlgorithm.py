@@ -48,6 +48,7 @@ def selection(population_ranked: List[Tuple[int, RouteInfo]], elite_size: int) -
     df['cum_sum'] = df.Fitness.cumsum()
     df['cum_percent'] = 100 * df.cum_sum / df.Fitness.sum()
 
+    # Элитарность - элита автоматически будет отобрана
     for i in range(0, elite_size):
         selection_results.append(population_ranked[i][0])
     for _ in range(0, len(population_ranked) - elite_size):
@@ -88,6 +89,7 @@ def breed_population(mating_pool: Generation, elite_size: int) -> Generation:
     """Функция скрещивания популяции.
     Возвращает новую популяцию, полученную в результате скрещивания."""
     children = []
+
     # Элитарность - элита автоматически проходит в следующее поколение
     for i in range(0, elite_size):
         children.append(mating_pool[i])
@@ -147,10 +149,9 @@ def get_next_generation(manager: Manager,
     return next_generation
 
 
-#
 def genetic_algorithm_plot(manager: Manager,
                            population: List[Client],
-                           pop_size: int,
+                           population_size: int,
                            elite_size: int,
                            mutation_rate: float,
                            generation_count: int):
@@ -159,7 +160,7 @@ def genetic_algorithm_plot(manager: Manager,
     Отслеживается прогресс и по окончании работы алгоритма выводится несколько графиков для наглядности.
     На консоль печатается результат работы алгоритма - расписание встреч менеджера.
     """
-    current_generation = initial_population(pop_size, population)
+    current_generation = initial_population(population_size, population)
     progress = [rank_routes(manager, current_generation)[0][1]]
 
     for i in range(0, generation_count):
@@ -232,7 +233,7 @@ for _ in range(0, 25):
 
 genetic_algorithm_plot(manager=random_manager,
                        population=random_client_list,
-                       pop_size=100,
+                       population_size=100,
                        elite_size=20,
                        mutation_rate=0.01,
                        generation_count=500)
