@@ -8,6 +8,7 @@ intervals = (
 
 
 def display_time(seconds, granularity=2):
+    """Возвращает время в виде отформатированной строки."""
     result = []
 
     for name, count in intervals:

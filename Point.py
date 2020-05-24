@@ -7,6 +7,7 @@ class Point:
         self.y = y
 
     def distance(self, other: 'Point') -> float:
+        """Возвращает расстояние между двумя точками."""
         x_dis = abs(self.x - other.x)
         y_dis = abs(self.y - other.y)
         distance_to_other = np.sqrt((x_dis ** 2) + (y_dis ** 2))

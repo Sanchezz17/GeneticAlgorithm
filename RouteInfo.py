@@ -26,7 +26,7 @@ class RouteInfo:
         )
         self.route = [start_dummy_client, *route, end_dummy_client]
         self.distance = 0
-        self.lateness_count = 0
+        self.cancellation_count = 0
         self.waiting_time = 0
         self.fitness = 0.0
         self.value = 0
@@ -36,12 +36,13 @@ class RouteInfo:
         self.calculate_parameters()
 
     def calculate_parameters(self) -> None:
+        """Функция расчета всех параметров маршрута"""
         if self.distance != 0:  # если параметры уже рассчитаны, то выходим
             return
 
         current_time = self.manager.work_time.from_time
         path_distance = 0
-        lateness_count = 0
+        cancellation_count = 0
         waiting_time = 0
         value = 0
         meetings = []
@@ -59,19 +60,19 @@ class RouteInfo:
                 arrival_time = to_client.free_time.from_time
 
             if arrival_time > to_client.free_time.to_time - to_client.meeting_duration:
-                lateness_count += 1
+                cancellation_count += 1
             else:
                 meetings.append((to_client.location, Timespan(current_time, current_time + to_client.meeting_duration)))
                 current_time = arrival_time + to_client.meeting_duration
                 value += to_client.value
 
         self.distance = path_distance
-        self.lateness_count = lateness_count
+        self.cancellation_count = cancellation_count
         self.waiting_time = waiting_time
         self.value = value
         self.meetings = meetings[:-1]
         self.end_time = current_time
-        self.fitness = self.value / float(self.distance + 3 * self.lateness_count + 2 * self.waiting_time)
+        self.fitness = self.value / float(self.distance + 10 * self.cancellation_count + 2 * self.waiting_time)
 
     def __str__(self) -> str:
         meetings = "\n\t".join([f"{meeting_location} {meeting_time}"
