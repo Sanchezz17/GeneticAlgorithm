@@ -64,7 +64,11 @@ class RouteInfo:
         self.meetings = meetings[:-1]
         self.end_time = current_time
 
-        denominator = float(self.distance / 1000 + 10 * self.cancellation_count + self.waiting_time / 5)
+        denominator = float(
+            self.distance / 1000 +
+            10 * self.cancellation_count +
+            self.waiting_time / 5)
+
         self.fitness = self.value / denominator
 
     def __str__(self) -> str:
