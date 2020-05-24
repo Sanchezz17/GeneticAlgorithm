@@ -209,7 +209,7 @@ random_manager = Manager(
     start=Point(x=int(random.random() * radius), y=int(random.random() * radius)),
     finish=Point(x=int(random.random() * radius), y=int(random.random() * radius)),
     work_time=Timespan(from_time=540, to_time=1260),
-    speed=10 * 60  # 36 км/час = 600 м/мин
+    speed=5 * 60  # 18 км/час = 300 м/мин
 )
 random_client_list = []
 min_meeting_duration = 20

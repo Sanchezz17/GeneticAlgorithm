@@ -51,8 +51,8 @@ class RouteInfo:
             else:
                 meetings.append(
                     (to_client.location,
-                     Timespan(current_time,
-                              current_time + to_client.meeting_duration)))
+                     Timespan(arrival_time,
+                              arrival_time + to_client.meeting_duration)))
                 path_distance += current_distance
                 current_time = arrival_time + to_client.meeting_duration
                 value += to_client.value
@@ -63,7 +63,9 @@ class RouteInfo:
         self.value = value
         self.meetings = meetings[:-1]
         self.end_time = current_time
-        self.fitness = self.value / float(self.distance + 10 * self.cancellation_count + 2 * self.waiting_time)
+
+        denominator = float(self.distance / 1000 + 10 * self.cancellation_count + self.waiting_time / 5)
+        self.fitness = self.value / denominator
 
     def __str__(self) -> str:
         meetings = "\n\t".join([f"{meeting_location} {meeting_time}"
