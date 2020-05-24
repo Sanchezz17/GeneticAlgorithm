@@ -163,7 +163,8 @@ def genetic_algorithm_plot(manager: Manager,
     progress = [rank_routes(manager, current_generation)[0][1]]
 
     for i in range(0, generation_count):
-        current_generation = get_next_generation(manager, current_generation, elite_size, mutation_rate)
+        current_generation = get_next_generation(manager, current_generation,
+                                                 elite_size, mutation_rate)
         progress.append(rank_routes(manager, current_generation)[0][1])
 
     best_route = progress[-1]
