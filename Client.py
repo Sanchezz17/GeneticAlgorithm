@@ -2,7 +2,7 @@ from Point import Point
 from Timespan import Timespan
 
 
-class Client:  # В генетическом алгоритме является геном
+class Client:
     def __init__(self, value: int, location: Point,
                  meeting_duration: float, free_time: Timespan) -> None:
         self.value = value
