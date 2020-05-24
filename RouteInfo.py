@@ -39,7 +39,7 @@ class RouteInfo:
             to_client = self.route[i + 1]
 
             current_distance = from_client.location.distance(to_client.location)
-            path_distance += current_distance
+
             arrival_time = current_time + int(current_distance / self.manager.speed)
 
             if arrival_time < to_client.free_time.from_time:
@@ -53,6 +53,7 @@ class RouteInfo:
                     (to_client.location,
                      Timespan(current_time,
                               current_time + to_client.meeting_duration)))
+                path_distance += current_distance
                 current_time = arrival_time + to_client.meeting_duration
                 value += to_client.value
 
