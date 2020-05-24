@@ -184,7 +184,7 @@ def genetic_algorithm_plot(manager: Manager,
 
     figure()
     plot([r.cancellation_count for r in progress])
-    ylabel('Lateness count')
+    ylabel('Cancellation count')
     xlabel('Generation')
     show()
 
