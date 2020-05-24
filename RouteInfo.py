@@ -11,20 +11,7 @@ class RouteInfo:
             raise ValueError("Маршрут не должен быть пустым")
 
         self.manager = manager
-        # Добавляем фиктивных клиентов для стартовой и конечной точки
-        start_dummy_client = Client(
-            value=0,
-            location=self.manager.start,
-            meeting_duration=0,
-            free_time=Timespan(from_time=0, to_time=math.inf)
-        )
-        end_dummy_client = Client(
-            value=0,
-            location=self.manager.finish,
-            meeting_duration=0,
-            free_time=Timespan(from_time=0, to_time=math.inf)
-        )
-        self.route = [start_dummy_client, *route, end_dummy_client]
+        self.route = [manager.start_dummy_client, *route, manager.end_dummy_client]
         self.distance = 0
         self.cancellation_count = 0
         self.waiting_time = 0
@@ -37,7 +24,8 @@ class RouteInfo:
 
     def calculate_parameters(self) -> None:
         """Функция расчета всех параметров маршрута"""
-        if self.distance != 0:  # если параметры уже рассчитаны, то выходим
+        if self.distance != 0:
+            # если параметры уже рассчитаны, то выходим
             return
 
         current_time = self.manager.work_time.from_time
