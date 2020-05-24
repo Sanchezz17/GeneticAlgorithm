@@ -5,7 +5,8 @@ from Timespan import Timespan
 
 
 class Manager:
-    def __init__(self, start: Point, finish: Point, work_time: Timespan, speed: int) -> None:
+    def __init__(self, start: Point, finish: Point,
+                 work_time: Timespan, speed: int) -> None:
         self.start = start
         self.start_dummy_client = Client(
             value=0,
