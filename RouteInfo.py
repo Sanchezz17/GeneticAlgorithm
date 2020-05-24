@@ -12,13 +12,13 @@ class RouteInfo:
 
         self.manager = manager
         self.route = [manager.start_dummy_client, *route, manager.end_dummy_client]
-        self.distance = 0
-        self.cancellation_count = 0
-        self.waiting_time = 0
-        self.fitness = 0.0
-        self.value = 0
-        self.meetings = []
-        self.end_time = 0
+        self.distance = 0  # длина маршрута в метрах
+        self.cancellation_count = 0  # количество отмененных встреч
+        self.waiting_time = 0  # суммарное время ожидания
+        self.fitness = 0.0  # значение функции приспособленности
+        self.value = 0  # общая ценность маршрута
+        self.meetings = []  # список встреч
+        self.end_time = 0  # время, когда менеджер вернется в конечную точку
 
         self.calculate_parameters()
 
