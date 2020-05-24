@@ -1,4 +1,3 @@
-import math
 from Client import Client
 from Manager import Manager
 from Timespan import Timespan, display_time
@@ -50,7 +49,10 @@ class RouteInfo:
             if arrival_time > to_client.free_time.to_time - to_client.meeting_duration:
                 cancellation_count += 1
             else:
-                meetings.append((to_client.location, Timespan(current_time, current_time + to_client.meeting_duration)))
+                meetings.append(
+                    (to_client.location,
+                     Timespan(current_time,
+                              current_time + to_client.meeting_duration)))
                 current_time = arrival_time + to_client.meeting_duration
                 value += to_client.value
 
