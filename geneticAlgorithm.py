@@ -210,6 +210,20 @@ def genetic_algorithm_plot_one_manager(manager: Manager,
     savefig(f'{output_directory}/value.png')
     close()
 
+    meetings = best_route.meetings
+    x_points = [client.location.x for (client, meeting_time) in meetings]
+    y_points = [client.location.y for (client, meeting_time) in meetings]
+    figure()
+    plot(x_points[0], y_points[0], 'g*-')
+    plot(x_points[:2], y_points[:2], 'g-')
+    plot(x_points[1:-1], y_points[1:-1], 'bo-')
+    plot(x_points[-2:], y_points[-2:], 'r-')
+    plot(x_points[-1], y_points[-1], 'rs')
+    ylabel('Y')
+    xlabel('X')
+    savefig(f'{output_directory}/route.png')
+    close()
+
     with open(f'{output_directory}/route.txt', 'w') as file:
         file.write(str(best_route))
 
@@ -239,7 +253,7 @@ def genetic_algorithm_plot_many_managers(managers: List[Manager],
             elite_size,
             mutation_rate,
             generation_count,
-            f'{output_directory}/manager{index}')
+            f'{output_directory}/manager{index + 1}')
         visited_clients += [client for (client, meeting_time) in route.meetings]
         current_population = [client for client in current_population
                               if client not in visited_clients]

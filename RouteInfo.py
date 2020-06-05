@@ -81,7 +81,7 @@ class RouteInfo:
             f"{meetings}\n\n"
             f"Конечная точка: {self.manager.finish} в {display_time(self.end_time * 60)}\n"
             f"Длина маршрута (в метрах): {self.distance}\n"
-            f"Количество встреч: {len(self.meetings)} из {len(self.route)}\n"
+            f"Количество встреч: {len(self.meetings)} из {len(self.route) - 2}\n"
             f"Суммарное время ожидания (в минутах): {self.waiting_time}\n"
             f"Суммарная ценность клиентов: {self.value}\n"        
             f"Значение функции приспособленности: {self.fitness}\n"
