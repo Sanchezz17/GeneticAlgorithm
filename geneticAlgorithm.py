@@ -158,8 +158,10 @@ def genetic_algorithm_plot_one_manager(manager: Manager,
                                        output_directory: str):
     """Генетический алгоритм.
     Основной цикл выполняется определенное количество раз.
-    Отслеживается прогресс и по окончании работы алгоритма выводится несколько графиков для наглядности.
+    Отслеживается прогресс и по окончании работы алгоритма выводится
+     несколько графиков в выходную директорию для наглядности.
     На консоль печатается результат работы алгоритма - расписание встреч менеджера.
+    Возвращает маршрут менеджера.
     """
     current_generation = initial_population(population_size, population)
     progress = [rank_routes(manager, current_generation)[0][1]]
@@ -221,6 +223,12 @@ def genetic_algorithm_plot_many_managers(managers: List[Manager],
                                          mutation_rate: float,
                                          generation_count: int,
                                          output_directory: str):
+    """Решение задачи с несколькими менеджерами
+    Последовательно для каждого менеджера запускается генетический алгоритм,
+    для построения маршрута среди еще не посещенных клиентов.
+    На каждом шаге пополняется множество посещенных клиентов.
+    Результаты выводятся в выходную директорию.
+    """
     current_population = population
     visited_clients = []
     for index, manager in enumerate(managers):
