@@ -1,14 +1,13 @@
 import numpy as np
 import pandas as pd
 import random
-from pylab import plot, ylabel, xlabel, show, figure
+from pylab import plot, ylabel, xlabel, show, figure, savefig
 from typing import List, Tuple
 from Client import Client
 from Manager import Manager
 from Point import Point
 from RouteInfo import RouteInfo
 from Timespan import Timespan
-
 
 Route = List[Client]  # В генетическом алгоритме является генотипом
 Generation = List[Route]
@@ -149,12 +148,13 @@ def get_next_generation(manager: Manager,
     return next_generation
 
 
-def genetic_algorithm_plot(manager: Manager,
-                           population: List[Client],
-                           population_size: int,
-                           elite_size: int,
-                           mutation_rate: float,
-                           generation_count: int):
+def genetic_algorithm_plot_one_manager(manager: Manager,
+                                       population: List[Client],
+                                       population_size: int,
+                                       elite_size: int,
+                                       mutation_rate: float,
+                                       generation_count: int,
+                                       output_directory: str):
     """Генетический алгоритм.
     Основной цикл выполняется определенное количество раз.
     Отслеживается прогресс и по окончании работы алгоритма выводится несколько графиков для наглядности.
@@ -174,31 +174,59 @@ def genetic_algorithm_plot(manager: Manager,
     plot([r.fitness for r in progress])
     ylabel('Fitness')
     xlabel('Generation')
-    show()
+    savefig(name=f'{output_directory}/fitness', fmt='png')
 
     figure()
     plot([r.distance for r in progress])
     ylabel('Distance')
     xlabel('Generation')
-    show()
+    savefig(name=f'{output_directory}/distance', fmt='png')
 
     figure()
     plot([r.cancellation_count for r in progress])
     ylabel('Cancellation count')
     xlabel('Generation')
-    show()
+    savefig(name=f'{output_directory}/cancellation_count', fmt='png')
 
     figure()
     plot([r.waiting_time for r in progress])
     ylabel('Waiting time')
     xlabel('Generation')
-    show()
+    savefig(name=f'{output_directory}/waiting_time', fmt='png')
 
     figure()
     plot([r.value for r in progress])
     ylabel('Value')
     xlabel('Generation')
-    show()
+    savefig(name=f'{output_directory}/value', fmt='png')
+
+    with open(f'{output_directory}/route', 'w') as file:
+        file.write(str(best_route))
+
+    return best_route
+
+
+def genetic_algorithm_plot_many_managers(managers: List[Manager],
+                                         population: List[Client],
+                                         population_size: int,
+                                         elite_size: int,
+                                         mutation_rate: float,
+                                         generation_count: int,
+                                         output_directory: str):
+    current_population = population
+    visited_clients = []
+    for index, manager in enumerate(managers):
+        route = genetic_algorithm_plot_one_manager(
+            manager,
+            current_population,
+            population_size,
+            elite_size,
+            mutation_rate,
+            generation_count,
+            f'{output_directory}/manager{index}')
+        visited_clients += [client for (client, meeting_time) in route.meetings]
+        current_population = [client for client in current_population
+                              if client not in visited_clients]
 
 
 # 540 = 9:00, 1260 = 21:00
@@ -206,24 +234,37 @@ def genetic_algorithm_plot(manager: Manager,
 # скорость в м / мин
 # время в минутах
 radius = 5000  # радиус расположения клиентов в метрах
+managers_count = 5
+clients_count = 50
+business_hours_from_time = 540
+business_hours_to_time = 1020
+minimum_working_time = 4 * 60
 
-random_manager = Manager(
-    start=Point(x=int(random.random() * radius), y=int(random.random() * radius)),
-    finish=Point(x=int(random.random() * radius), y=int(random.random() * radius)),
-    work_time=Timespan(from_time=540, to_time=1260),
-    speed=5 * 60  # 18 км/час = 300 м/мин
-)
-random_client_list = []
+
+managers = []
+for _ in range(0, managers_count):
+    # менеджер работает минимум 4 часа
+    random_work_time_from = random.randint(business_hours_from_time, business_hours_to_time - minimum_working_time)
+    random_work_time_to = random.randint(random_work_time_from + minimum_working_time, business_hours_to_time)
+    managers.append(
+        Manager(
+            start=Point(x=int(random.random() * radius), y=int(random.random() * radius)),
+            finish=Point(x=int(random.random() * radius), y=int(random.random() * radius)),
+            work_time=Timespan(from_time=random_work_time_from, to_time=random_work_time_to),
+            speed=5 * 60  # 18 км/час = 300 м/мин
+        ))
+
+clients = []
 min_meeting_duration = 20
 max_meeting_duration = 60
 
-for _ in range(0, 25):
+for _ in range(0, clients_count):
     random_meeting_duration = random.randint(min_meeting_duration, max_meeting_duration)
-    random_free_time_from = random.randint(random_manager.work_time.from_time,
-                                           random_manager.work_time.to_time - random_meeting_duration)
+    random_free_time_from = random.randint(business_hours_from_time,
+                                           business_hours_to_time - random_meeting_duration)
     random_free_time_to = random.randint(random_free_time_from + random_meeting_duration,
-                                         random_manager.work_time.to_time)
-    random_client_list.append(
+                                         business_hours_to_time)
+    clients.append(
         Client(
             value=random.randint(1, 100),
             location=Point(x=int(random.random() * radius), y=int(random.random() * radius)),
@@ -231,9 +272,12 @@ for _ in range(0, 25):
             free_time=Timespan(from_time=random_free_time_from, to_time=random_free_time_to)
         ))
 
-genetic_algorithm_plot(manager=random_manager,
-                       population=random_client_list,
-                       population_size=100,
-                       elite_size=20,
-                       mutation_rate=0.01,
-                       generation_count=500)
+output_directory = "output"
+
+genetic_algorithm_plot_many_managers(managers=managers,
+                                     population=clients,
+                                     population_size=100,
+                                     elite_size=20,
+                                     mutation_rate=0.01,
+                                     generation_count=500,
+                                     output_directory=output_directory)

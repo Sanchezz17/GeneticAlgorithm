@@ -50,7 +50,7 @@ class RouteInfo:
                 cancellation_count += 1
             else:
                 meetings.append(
-                    (to_client.location,
+                    (to_client,
                      Timespan(arrival_time,
                               arrival_time + to_client.meeting_duration)))
                 path_distance += current_distance
@@ -72,8 +72,8 @@ class RouteInfo:
         self.fitness = self.value / denominator
 
     def __str__(self) -> str:
-        meetings = "\n\t".join([f"{meeting_location} {meeting_time}"
-                                for (meeting_location, meeting_time) in self.meetings])
+        meetings = "\n\t".join([f"{client} {meeting_time}"
+                                for (client, meeting_time) in self.meetings])
         return (
             "Маршрут\n"
             f"Старт: {self.manager.start} в {display_time(self.manager.work_time.from_time * 60)}\n\n"
