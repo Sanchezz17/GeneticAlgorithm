@@ -1,7 +1,8 @@
 import numpy as np
 import pandas as pd
+import os
 import random
-from pylab import plot, ylabel, xlabel, show, figure, savefig
+from pylab import plot, ylabel, xlabel, close, figure, savefig
 from typing import List, Tuple
 from Client import Client
 from Manager import Manager
@@ -174,33 +175,40 @@ def genetic_algorithm_plot_one_manager(manager: Manager,
     plot([r.fitness for r in progress])
     ylabel('Fitness')
     xlabel('Generation')
-    savefig(name=f'{output_directory}/fitness', fmt='png')
+    filename = f'{output_directory}/fitness.png'
+    os.makedirs(os.path.dirname(filename), exist_ok=True)
+    savefig(filename)
+    close()
 
     figure()
     plot([r.distance for r in progress])
     ylabel('Distance')
     xlabel('Generation')
-    savefig(name=f'{output_directory}/distance', fmt='png')
+    savefig(f'{output_directory}/distance.png')
+    close()
 
     figure()
     plot([r.cancellation_count for r in progress])
     ylabel('Cancellation count')
     xlabel('Generation')
-    savefig(name=f'{output_directory}/cancellation_count', fmt='png')
+    savefig(f'{output_directory}/cancellation_count.png')
+    close()
 
     figure()
     plot([r.waiting_time for r in progress])
     ylabel('Waiting time')
     xlabel('Generation')
-    savefig(name=f'{output_directory}/waiting_time', fmt='png')
+    savefig(f'{output_directory}/waiting_time.png')
+    close()
 
     figure()
     plot([r.value for r in progress])
     ylabel('Value')
     xlabel('Generation')
-    savefig(name=f'{output_directory}/value', fmt='png')
+    savefig(f'{output_directory}/value.png')
+    close()
 
-    with open(f'{output_directory}/route', 'w') as file:
+    with open(f'{output_directory}/route.txt', 'w') as file:
         file.write(str(best_route))
 
     return best_route

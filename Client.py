@@ -12,4 +12,4 @@ class Client:
 
     def __str__(self) -> str:
         return f"Клиент: (ценность: {self.value}, местоположение: {self.location}, " \
-               f"длительность встречи: {self.meeting_duration}, свободное время: {self.free_time}"
+               f"длительность встречи: {self.meeting_duration}, свободное время: {self.free_time})"
